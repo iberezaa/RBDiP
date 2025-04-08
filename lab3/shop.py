@@ -13,14 +13,12 @@ class Shop:
         self.products.append(new_product)
 
     def get_product(self, product_name):
-        """Возвращает продукт по названию, если он есть в магазине"""
         for product in self.products:
             if product.name == product_name:
                 return product
         return None
 
     def place_order(self, product_name, quantity):
-        """Передает заказ менеджеру заказов и обновляет количество товара"""
         product = self.get_product(product_name)
         if product is None:
             return "Товар не найден"
@@ -32,5 +30,4 @@ class Shop:
         return f"Заказ оформлен: {order.quantity} x {order.product_name} на сумму {order.total_price}"
 
     def show_orders(self):
-        """Выводит список оформленных заказов"""
         self.order_manager.list_orders()
