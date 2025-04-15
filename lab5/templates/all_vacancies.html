@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Вся база вакансий</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th,
+        td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            cursor: pointer;
+        }
+        
+        .filter-input {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .vacancy-count {
+            margin-right: 20px;
+        }
+        
+        .top-salaries {
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Вся база вакансий</h1>
+    <div class="header-info">
+        <button onclick="window.location.href='/'">Вернуться</button>
+        <div class="vacancy-count">
+            Вакансий в базе: {{ vacancy_count }}
+        </div>
+        <div class="top-salaries">
+            <h4>Топ-3 профессии по зарплате в бд:</h4>
+            <ol>
+                {% for profession in top_salaries %}
+                <li>{{ profession.name }} - {{ profession.average_salary }}</li>
+                {% endfor %}
+            </ol>
+        </div>
+    </div>
+    <table id="vacanciesTable">
+        <thead>
+            <tr>
+                <th>ID<br><input type="text" class="filter-input" data-column="0"></th>
+                <th>Название<br><input type="text" class="filter-input" data-column="1"></th>
+                <th>Описание<br><input type="text" class="filter-input" data-column="2"></th>
+                <th>Требования<br><input type="text" class="filter-input" data-column="3"></th>
+                <th id="salaryHeader">Зарплата<br><input type="text" class="filter-input" data-column="4"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vacancy in vacancies %}
+            <tr>
+                <td><a href="{{ vacancy[5] }}" target="_blank">{{ vacancy[0] }}</a></td>
+                <td>{{ vacancy[1] }}</td>
+                <td>{{ vacancy[2] }}</td>
+                <td>{{ vacancy[3] }}</td>
+                <td>{{ vacancy[4] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script>
+        $(document).ready(function() {
+            $('#salaryHeader').click(function() {
+                var vacancies = [];
+                $('#vacanciesTable tbody tr').each(function() {
+                    var row = $(this);
+                    var vacancy = {
+                        id: row.find('td:eq(0) a').text(),
+                        title: row.find('td:eq(1)').text(),
+                        snippet: row.find('td:eq(2)').text(),
+                        requirement: row.find('td:eq(3)').text(),
+                        salary: row.find('td:eq(4)').text(),
+                        url: row.find('td:eq(0) a').attr('href')
+                    };
+                    vacancies.push(vacancy);
+                });
+
+                var sortBySalary = 'asc';
+                if ($(this).data('sort') === 'asc') {
+                    sortBySalary = 'desc';
+                    $(this).data('sort', 'desc');
+                } else {
+                    sortBySalary = 'asc';
+                    $(this).data('sort', 'asc');
+                }
+
+                $.ajax({
+                    url: '/sort_vacancies',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        vacancies: vacancies,
+                        sort_by_salary: sortBySalary
+                    }),
+                    success: function(sortedVacancies) {
+                        var tbody = $('#vacanciesTable tbody');
+                        tbody.empty();
+                        $.each(sortedVacancies, function(index, vacancy) {
+                            tbody.append(
+                                '<tr>' +
+                                '<td><a href="' + vacancy.url + '" target="_blank">' + vacancy.id + '</a></td>' +
+                                '<td>' + vacancy.title + '</td>' +
+                                '<td>' + vacancy.snippet + '</td>' +
+                                '<td>' + vacancy.requirement + '</td>' +
+                                '<td>' + vacancy.salary + '</td>' +
+                                '</tr>'
+                            );
+                        });
+                    },
+                    error: function(error) {
+                        console.error('Ошибка при сортировке:', error);
+                    }
+                });
+            });
+
+            $('.filter-input').on('keyup', function() {
+                var column = $(this).data('column');
+                var value = $(this).val().toLowerCase();
+                $('#vacanciesTable tbody tr').filter(function() {
+                    $(this).toggle($(this).find('td').eq(column).text().toLowerCase().indexOf(value) > -1);
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

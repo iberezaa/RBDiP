@@ -15,7 +15,7 @@ class Shop:
         for product in self.products:
             if product.name == product_name:
                 return product
-        raise ValueError(f"Товар с именем {product_name} не найден")  # Исключение для ошибки
+        raise ValueError(f"Товар с именем {product_name} не найден")
 
     def check_product_availability(self, product, quantity):
         """Проверка, есть ли достаточное количество товара."""
@@ -27,13 +27,12 @@ class Shop:
             product = self.get_product(product_name)
             self.check_product_availability(product, quantity)
 
-            # Создание заказа
             product.quantity -= quantity
             order = self.order_manager.create_order(product_name, quantity, product.price)
             return f"Заказ оформлен: {order.quantity} x {order.product_name} на сумму {order.total_price}"
 
         except ValueError as e:
-            return str(e)  # Возвращаем ошибку как строку, если возникло исключение
+            return str(e)
 
     def show_orders(self):
         """Отобразить все заказы."""
